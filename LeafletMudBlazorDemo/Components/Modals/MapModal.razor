@@ -1,0 +1,114 @@
+﻿@page "/modal"
+
+<div style="min-width: 200px; min-height: 200px;">
+
+    <RealTimeMap @ref="map"
+                 Parameters="parameters"
+                 Options="options"
+                 width="@($"{MapWidth}px")"
+                 height="@($"{MapHeight}px")"
+                 OnAfterMapLoaded="MapLoaded" />
+
+</div>
+
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance? MudDialog { get; set; }
+
+    private int MapWidth = 400;
+    private int MapHeight = 600;
+
+    private RealTimeMap? map;
+
+    RealTimeMap.LoadParameters parameters = new RealTimeMap.LoadParameters()  //general map settings
+        {
+            location = new RealTimeMap.Location()
+            {
+                latitude = 38.13296182290932,
+                longitude = 13.380691095922262,
+            },
+            zoomLevel = 12,
+            mapScale = new RealTimeMap.MapScale()
+            {
+                has = true,
+                meters = true
+            },
+            basemap = new RealTimeMap.Basemap()
+            {
+                basemapLayers = new List<RealTimeMap.BasemapLayer>()
+                {
+                    new RealTimeMap.BasemapLayer()
+                    {
+                        url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        attribution = "©Open Street Map",
+                        title = "Open Street Map",
+                        detectRetina = true
+                    }
+                }
+            }
+        };
+
+    RealTimeMap.MapOptions options = new RealTimeMap.MapOptions()
+        {
+            interactionOptions = new RealTimeMap.InteractionOptions()
+            {
+                doubleClickZoom = true,
+                shiftBoxZoom = false
+            }
+        };
+
+
+    private async Task MapLoaded(RealTimeMap.MapEventArgs e)
+    {
+        if (map is null) return;
+        
+        // map.Geometric.Points.changeExtentWhenAddPoints = false;
+        // map.Geometric.Points.changeExtentWhenMovingPoints = false;
+
+        // It is needed set a pin before a polygon can be drawn, but i dont know why. If this Line is commented out, the polygon will not draw.
+        await SetPin(13.377499, 38.132329, "Pin");
+
+
+        var polygon = new List<double[]>
+                {
+                    new double[] { 37.133327, 13.373858 },
+                    new double[] { 34.126570, 12.375996 },
+                    new double[] { 38.132329, 13.377499 },
+                    new double[] { 38.140491, 13.373607 },
+             };
+
+             // Draw the polygon. This does only work if the modal is opened the first time. After that, the browser page has to be refreshed to get it working again.
+        await map.Geometric.DisplayPolygonsFromArray.add(polygon, new RealTimeMap.PolygonSymbol()
+            {
+                color = "orange",
+                fillColor = "yellow",
+                weight = 3,
+                opacity = 0.8,
+                fillOpacity = 0.8
+            });
+
+    }
+
+
+    private async Task SetPin(double Lng, double Lat, object Value)
+    {
+        if (map is null) return;
+
+        var sp = new RealTimeMap.StreamPoint()
+            {
+                guid = Guid.NewGuid(),
+                latitude = Lat,
+                longitude = Lng,
+                type = "Pins",
+                value = Value
+            };
+
+        await map.Geometric.Points.upload(new List<RealTimeMap.StreamPoint>() { sp });
+        await map.Geometric.Points.moveTo([ sp ]);
+    }
+
+
+}
+

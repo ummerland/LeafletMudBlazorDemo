@@ -1,0 +1,23 @@
+﻿@page "/"
+@using LeafletMudBlazorDemo.Components.Modals
+
+@rendermode InteractiveServer
+
+@inject IDialogService DialogService
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<MudButton OnClick="OpenMapModal" Variant="Variant.Filled">Open Map</MudButton>
+
+
+
+@code {
+
+    private async Task OpenMapModal()
+    {
+        var dialog = await DialogService.ShowAsync<MapModal>("Map");
+    }
+
+}
